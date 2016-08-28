@@ -12,6 +12,7 @@
 }
 
 .category i{
+	margin-top:5px;
 	padding-left: 10px;
 }
 
@@ -59,8 +60,8 @@
 	margin:0px;
 	color:#fff;
 	background-color: #673AB7;
-	padding-top:10px;
-	padding-bottom:10px;
+	padding-top:8px;
+	padding-bottom:8px;
 	position: fixed;
 	width:100%;
 }
