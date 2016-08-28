@@ -25,30 +25,31 @@
 	      </md-content>
 	    </md-sidenav>
 	</section>
-
-	<div class="container" md-swipe-left="onSwipeLeft()" md-swipe-right="onSwipeRight()">
-		<div class="row">
-			<h3 class="category"><i class="material-icons" ng-click="toggleLeft()">menu</i> <span ng-bind="displayCategory.name"></span></h3>
-		</div>
-		<div class="row">
-			<div class="article" ng-repeat="article in articles">
-				<div class="image" ng-click="read(article)">
-					<center><img ng-src="{{article.image | srcImage}}"/></center>
+	<div class="main-container">
+		<div class="container" md-swipe-left="onSwipeLeft()" md-swipe-right="onSwipeRight()">
+			<div class="row">
+				<h3 class="category"><i class="material-icons" ng-click="toggleLeft()">menu</i> <span ng-bind="displayCategory.name"></span></h3>
+			</div>
+			<div class="not-use-block"></div>
+			<div class="row">
+				<div class="article" ng-repeat="article in articles">
+					<div class="image" ng-click="read(article)">
+						<center><img ng-src="{{article.image | srcImage}}"/></center>
+					</div>
+					<div class="title">
+						<h4 ng-click="read(article)">
+							<span ng-bind="article.title"></span>
+							<span class="date" ng-bind="article.date | timeAgo"></span>
+						</h4>
+						<p><span ng-bind="article.text | limitTo:150"></span><span>[...]</span></p>
+					</div>	
+					<div class="clear"></div>
 				</div>
-				<div class="title">
-					<h4 ng-click="read(article)">
-						<span ng-bind="article.title"></span>
-						<span class="date" ng-bind="article.date | timeAgo"></span>
-					</h4>
-					<p><span ng-bind="article.text | limitTo:150"></span><span>[...]</span></p>
-				</div>	
-				<div class="clear"></div>
+			</div>
+			<div class="loading">
+				<center><img src="/resources/images/loading-blue.gif"/></center>
 			</div>
 		</div>
-		<div class="loading">
-			<center><img src="/resources/images/loading-blue.gif"/></center>
-		</div>
-		<!--center><botton class="btn btn-primary" ng-click="loadMore()">Load More</botton></center-->
 	</div>
 
 	<script src="/node_modules/angular/angular.js"></script>
