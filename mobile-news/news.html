@@ -36,8 +36,10 @@
 					<center><img ng-src="{{article.image | srcImage}}"/></center>
 				</div>
 				<div class="title">
-					<h4 ng-bind="article.title" ng-click="read(article)"></h4>
-					<p><span class="date" ng-bind="article.date | timeAgo"></span></p><br>
+					<h4 ng-click="read(article)">
+						<span ng-bind="article.title"></span>
+						<span class="date" ng-bind="article.date | timeAgo"></span>
+					</h4>
 					<p><span ng-bind="article.text | limitTo:150"></span><span>[...]</span></p>
 				</div>	
 				<div class="clear"></div>
