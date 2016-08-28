@@ -1,0 +1,257 @@
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<title>News | Sabay</title>
+	<!-- <link rel="stylesheet" type="text/css" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"> -->
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" href="node_modules/angular-material/angular-material.css">
+	<link rel="stylesheet" type="text/css" href="/resources/style/news-style.css">
+</head>
+<body ng-app="myApp" ng-controller="myCtrl">
+	<section layout="row" flex>
+	    <md-sidenav class="md-sidenav-left md-whiteframe-4dp" md-component-id="left">
+	      	<md-toolbar class="md-theme-indigo">
+	        	<h1 class="md-toolbar-tools"><span>ព័ត៌មាន</span></h1>
+	      	</md-toolbar>
+	      	<md-content layout-margin>
+	        	<ul class="category-menu">
+	        		<li ng-repeat="c in category" ng-click="categoryClick(c)">
+	        			<span ng-bind="c.name"></span>
+	        		</li>
+	        	</ul>
+	      </md-content>
+	    </md-sidenav>
+	</section>
+
+	<div class="container" md-swipe-left="onSwipeLeft()" md-swipe-right="onSwipeRight()">
+		<div class="row">
+			<h3 class="category"><i class="material-icons" ng-click="toggleLeft()">menu</i> <span ng-bind="displayCategory.name"></span></h3>
+		</div>
+		<div class="row">
+			<div class="article" ng-repeat="article in articles">
+				<div class="image" ng-click="read(article)">
+					<center><img ng-src="{{article.image | srcImage}}"/></center>
+				</div>
+				<div class="title">
+					<h4 ng-bind="article.title" ng-click="read(article)"></h4>
+					<p><span class="date" ng-bind="article.date | timeAgo"></span></p><br>
+					<p><span ng-bind="article.text | limitTo:150"></span><span>[...]</span></p>
+				</div>	
+				<div class="clear"></div>
+			</div>
+		</div>
+		<div class="loading">
+			<center><img src="/resources/images/loading-blue.gif"/></center>
+		</div>
+		<!--center><botton class="btn btn-primary" ng-click="loadMore()">Load More</botton></center-->
+	</div>
+
+	<script src="/node_modules/angular/angular.js"></script>
+	<script src="/node_modules/jquery/dist/jquery.min.js"></script>
+	<!--script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script-->
+
+	<script src="/node_modules/angular-aria/angular-aria.js"></script> 
+    <script src="/node_modules/angular-animate/angular-animate.js"></script> 
+    <script src="/node_modules/angular-material/angular-material.js"></script> 
+
+
+	<script>
+		angular.module('myApp', ['ngMaterial']).controller('myCtrl', articleController)
+	
+		.filter('srcImage', function(){
+			return function(htmlImage){	
+				return /<img.*?src="(.*?)"/.exec(htmlImage)[1];
+			}			   		
+	    })
+	    .filter('timeAgo', function($filter){
+	    	var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+	    	function getIntMonth(month) {
+  					return $.inArray(month, months) + 1;
+			}
+			return function(date){
+				myDate = date.split(" ");
+				var newDate = getIntMonth(myDate[1].split(",")[0].trim()) + '/' + myDate[0].trim() + '/' + myDate[2].trim();
+			    secondsPast = (new Date().getTime() - new Date(newDate).getTime()) / 1000;
+			    console.log(secondsPast);
+			    if(secondsPast < 60){
+			      return 'ប៉ុន្មាន វិនាទីមុន';
+			    }
+			    if(secondsPast < 3600){
+			      var minute = parseInt(secondsPast/60);
+			      return  minute+ ' នាទីមុន';
+			    }
+			    if(secondsPast < 86400){
+			    
+			     var hour = parseInt(secondsPast/3600);
+			      return  hour+ ' ម៉ោងមុន';
+			    }
+			    if(secondsPast < 691200){//under 8 days
+			      
+			      var day=parseInt(secondsPast/86400);
+			       return day + " ថ្ងៃមុន";
+			    }
+			    if(secondsPast >= 691200){//over 8 days
+			    	return date;
+			    }
+			};
+		});
+
+
+		function articleController($scope, $http, $window, $mdSidenav, $log, $timeout){
+
+			$scope.category = [
+				{index:0, id: 1, name: 'ជីវិត'},
+				{index:1, id: 3, name: 'កំសាន្ត'},
+				{index:2, id: 4, name: 'បច្ចេកវិទ្យា'},
+				{index:3, id: 6, name: 'កីទ្បា'}
+			];
+
+			var categoryIndex = 2;
+
+			$scope.displayCategory = {
+				id: $scope.category[categoryIndex].id,
+				name: $scope.category[categoryIndex].name
+			};
+
+			var Article = {};
+			$scope.articles = [];
+			$scope.filter = {
+				cid: $scope.category[categoryIndex].id,
+				page:0
+			};
+
+			$scope.read = function(article){
+				window.open(article.link, '_blank');
+			};
+
+			Article.load = function(){		
+				//var requestUrl = 'http://192.168.43.40:8080/api/v1/sabaynews/article'
+				var requestUrl = "https://sabay-api.herokuapp.com/api/v1/sabaynews/article";
+
+				$http({
+					url: requestUrl,
+					method: 'GET',
+					params: $scope.filter
+				}).then(function(response){
+					if(response.data.length==0){
+						Article.noMore = true;
+						return;
+					}
+					angular.forEach(response.data, function(data, index){
+						$scope.articles.push(data);	
+					});
+					Article.noMore = false;
+				}, function(response){
+					console.log(response);
+				});	
+			}
+
+			$scope.loadMore = function(){
+				$scope.filter.page++;
+				Article.load();
+			}
+
+			$scope.loadMore();
+
+			// bind to srcoll event to load more news
+			angular.element($window).bind("scroll", function() {
+                var windowHeight = "innerHeight" in window ? window.innerHeight: document.documentElement.offsetHeight;
+                var body = document.body, html = document.documentElement;
+                var docHeight = Math.max(body.scrollHeight,body.offsetHeight, html.clientHeight,html.scrollHeight, html.offsetHeight);
+                windowBottom = windowHeight + window.pageYOffset;
+                
+                if (windowBottom >= (docHeight)) { 
+                	console.log("reach haft of height!");
+                	if(Article.noMore){
+                		console.log("no more!");
+                		return;
+                	}	
+                	$scope.$apply($scope.loadMore());
+                }
+ 	        });
+
+			//category click
+			$scope.categoryClick = function(c){
+				$scope.toggleLeft();
+				$scope.displayCategory.name = c.name;
+				$scope.filter = {
+					cid: c.id,
+					page: 0
+				};
+				$scope.articles = [];
+				$scope.loadMore();
+			};
+
+			//swipe
+ 	        $scope.onSwipeLeft = function(ev) {
+ 	        	categoryIndex++;
+ 	        	if( categoryIndex >= $scope.category.length) categoryIndex = 0;	
+		      	$scope.swipeLoad();	
+		    };
+		    $scope.onSwipeRight = function(ev) {
+				$scope.toggleLeft();    	  		
+		    };
+
+		    //load data when swipe right
+		    $scope.swipeLoad = function(){
+		    	$scope.displayCategory.name = $scope.category[categoryIndex].name;
+				$scope.filter = {
+					cid: $scope.category[categoryIndex].id,
+					page: 0
+				};
+				$scope.articles = [];
+		      	$scope.loadMore();		    		
+		    };
+
+
+		    //side nav
+		    $scope.toggleLeft = buildDelayedToggler('left');	
+		    $scope.isOpenLeft = function(){
+		      	return $mdSidenav('left').isOpen();
+		    };			/**
+		     * Supplies a function that will continue to operate until the
+		     * time is up.
+		     */
+		    function debounce(func, wait, context) {
+		      var timer;
+		      return function debounced() {
+		        var context = $scope,
+		            args = Array.prototype.slice.call(arguments);
+		        $timeout.cancel(timer);
+		        timer = $timeout(function() {
+		          timer = undefined;
+		          func.apply(context, args);
+		        }, wait || 0);
+		      };
+		    }
+		    /**
+		     * Build handler to open/close a SideNav; when animation finishes
+		     * report completion in console
+		     */
+		    function buildDelayedToggler(navID) {
+		      return debounce(function() {
+		        // Component lookup should always be available since we are not using `ng-if`
+		        $mdSidenav(navID)
+		          .toggle()
+		          .then(function () {
+		            $log.debug("toggle " + navID + " is done");
+		          });
+		      }, 0);
+		    }
+		    function buildToggler(navID) {
+		      return function() {
+		        // Component lookup should always be available since we are not using `ng-if`
+		        $mdSidenav(navID)
+		          .toggle()
+		          .then(function () {
+		            $log.debug("toggle " + navID + " is done");
+		          });
+		      }
+		    }
+		}
+	</script>
+</body>
+</html>
